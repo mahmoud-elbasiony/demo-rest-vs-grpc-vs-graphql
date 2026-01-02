@@ -7,5 +7,15 @@ import java.util.List;
 
 @Repository
 public interface BookRepository extends JpaRepository<Book, Long> {
-    List<Book> findByAuthor(String author);
+    // Find books by author ID
+    List<Book> findByAuthorId(Long authorId);
+
+    // Find books by author name
+    List<Book> findByAuthorName(String authorName);
+
+    // Alternative: Find books by author name (case-insensitive)
+    List<Book> findByAuthorNameIgnoreCase(String authorName);
+
+    // Alternative: Find books by author name containing
+    List<Book> findByAuthorNameContainingIgnoreCase(String authorName);
 }

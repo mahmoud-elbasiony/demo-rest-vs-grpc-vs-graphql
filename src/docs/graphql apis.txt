@@ -1,0 +1,393 @@
+# # GraphQL API - Complete Request Collection
+
+# ## 📖 QUERIES (Read Operations)
+
+# ### Get All Authors
+# query GetAllAuthors {
+#   allAuthors {
+#     id
+#     name
+#     email
+#     bio
+#   }
+# }
+# query GetAuthorById {
+#   author(id: 2) {
+#     id
+#     name
+#     email
+#     bio
+#   }
+# }
+# query GetAuthorByName {
+#   authorByName(name: "J.R.R. Tolkien") {
+#     id
+#     name
+#     email
+#     bio
+#   }
+# }
+# query GetAuthorWithBooks {
+#   author(id: 1) {
+#     id
+#     name
+#     email
+#     bio
+#     books {
+#       id
+#       title
+#       isbn
+#       price
+#     }
+#   }
+# }
+# query GetAllBooks {
+#   allBooks {
+#     id
+#     title
+#     isbn
+#     price
+#     author {
+#       id
+#       name
+#       email
+#     }
+#   }
+# }
+# query GetBookById {
+#   book(id: 1) {
+#     id
+#     title
+#     isbn
+#     price
+#     author {
+#       id
+#       name
+#       email
+#       bio
+#     }
+#   }
+# }
+# query GetBooksByAuthorId {
+#   booksByAuthor(authorId: 1) {
+#     id
+#     title
+#     isbn
+#     price
+#   }
+# }
+# query GetBooksByAuthorName {
+#   booksByAuthorName(authorName: "tolkiens") {
+#     id
+#     title
+#     isbn
+#     price
+#     author {
+#       name
+#       email
+#     }
+#   }
+# }
+# query GetAuthorsAndTheirBooks {
+#   allAuthors {
+#     id
+#     name
+#     email
+#     books {
+#       title
+#       price
+#     }
+#   }
+# }
+# mutation CreateAuthor {
+#   createAuthor(
+#     name: "tolkiens"
+#     email: "tolkiens@gmail.com"
+#     bio: "great writer"
+#   ) {
+#     id
+#     name
+#     email
+#     bio
+#   }
+# }
+# mutation {
+#   a:createAuthor(
+#     name: "George Orwell"
+#     email: "orwell@gmail.com"
+#     bio: "English novelist and essayist"
+#   ) {
+#     id,
+#     name
+#   }
+
+#   b:createAuthor(
+#     name: "J.K. Rowling"
+#     email: "jkrowling@gmail.com"
+#     bio: "British author and philanthropist"
+#   ) {
+#     id
+
+#   }
+# }
+# mutation UpdateAuthor {
+#   updateAuthor(
+#     id: 2
+#     name: "tolkiens sons"
+#     email: "tolkiens.sons@gmail.com"
+#     bio: "great writers"
+#   ) {
+#     id
+#     name
+#     email
+#     bio
+#   }
+# }
+# mutation UpdateAuthorPartial {
+#   updateAuthor(
+#     id: 1
+#     name: "J.R.R. Tolkien"
+#   ) {
+#     id
+#     name
+#     email
+#     bio
+#   }
+# }
+# mutation DeleteAuthor {
+#   deleteAuthor(id: 3)
+# }
+# mutation CreateBook {
+#   createBook(
+#     title: "The Hobbit"
+#     isbn: "978-0547928227"
+#     price: 14.99
+#     authorId: 1
+#   ) {
+#     id
+#     title
+#     isbn
+#     price
+#     author {
+#       id
+#       name
+#       email
+#     }
+#   }
+# }
+# mutation CreateMultipleBooks {
+#   book1: createBook(
+#     title: "The Hobbit"
+#     isbn: "978-0547928227"
+#     price: 14.99
+#     authorId: 1
+#   ) {
+#     id
+#     title
+#   }
+
+#   book2: createBook(
+#     title: "The Lord of the Rings"
+#     isbn: "978-0544003415"
+#     price: 22.99
+#     authorId: 1
+#   ) {
+#     id
+#     title
+#   }
+
+#   book3: createBook(
+#     title: "The Silmarillion"
+#     isbn: "978-0618391110"
+#     price: 18.99
+#     authorId: 1
+#   ) {
+#     id
+#     title
+#   }
+# }
+# mutation UpdateBook {
+#   updateBook(
+#     id: 1
+#     title: "The Hobbit - Special Edition"
+#     price: 19.99
+#   ) {
+#     id
+#     title
+#     isbn
+#     price
+#     author {
+#       name
+#     }
+#   }
+# }
+# mutation UpdateBookAuthor {
+#   updateBook(
+#     id: 1
+#     authorId: 2
+#   ) {
+#     id
+#     title
+#     author {
+#       id
+#       name
+#     }
+#   }
+# }
+# mutation DeleteBook {
+#   deleteBook(id: 1)
+# }
+# mutation CreateAuthorAndBooks {
+#   newAuthor: createAuthor(
+#     name: "Isaac Asimov"
+#     email: "asimov@gmail.com"
+#     bio: "American science fiction writer"
+#   ) {
+#     id
+#     name
+#   }
+
+#   book1: createBook(
+#     title: "Foundation"
+#     isbn: "978-0553293357"
+#     price: 15.99
+#     authorId: 1
+#   ) {
+#     id
+#     title
+#   }
+
+#   book2: createBook(
+#     title: "I, Robot"
+#     isbn: "978-0553382563"
+#     price: 14.99
+#     authorId: 1
+#   ) {
+#     id
+#     title
+#   }
+# }
+# mutation UpdateMultiple {
+#   updatedAuthor: updateAuthor(
+#     id: 1
+#     email: "newemail@gmail.com"
+#   ) {
+#     id
+#     email
+#   }
+
+#   updatedBook: updateBook(
+#     id: 1
+#     price: 24.99
+#   ) {
+#     id
+#     price
+#   }
+# }
+# mutation CreateAndQuery {
+#   createAuthor(
+#     name: "Stephen King"
+#     email: "sking@gmail.com"
+#     bio: "American horror writer"
+#   ) {
+#     id
+#     name
+#     email
+#   }
+# }
+
+# query GetNewAuthor {
+#   author(id: 1) {
+#     id
+#     name
+#     books {
+#       title
+#     }
+#   }
+# }
+
+
+#############################
+#############################
+#############################
+# mutation SetupBookStore {
+#   # Create Authors
+#   tolkien: createAuthor(
+#     name: "J.R.R. Tolkien"
+#     email: "tolkien@middleearth.com"
+#     bio: "Creator of Middle-earth"
+#   ) {
+#     id
+#     name
+#   }
+
+#   orwell: createAuthor(
+#     name: "George Orwell"
+#     email: "orwell@literature.com"
+#     bio: "Political novelist"
+#   ) {
+#     id
+#     name
+#   }
+
+#   # Create Books
+#   hobbit: createBook(
+#     title: "The Hobbit"
+#     isbn: "978-0547928227"
+#     price: 14.99
+#     authorId: 1
+#   ) {
+#     id
+#     title
+#   }
+
+#   lotr: createBook(
+#     title: "The Lord of the Rings"
+#     isbn: "978-0544003415"
+#     price: 22.99
+#     authorId: 1
+#   ) {
+#     id
+#     title
+#   }
+
+#   nineteen84: createBook(
+#     title: "1984"
+#     isbn: "978-0451524935"
+#     price: 15.99
+#     authorId: 2
+#   ) {
+#     id
+#     title
+#   }
+# }
+# query GetCompleteCatalog {
+#   authors: allAuthors {
+#     id
+#     name
+#     email
+#     books: books {
+#       id
+#     }
+#   }
+
+#   books: allBooks {
+#     id
+#     title
+#     price
+#     author: author {
+#       name
+#     }
+#   }
+# }
+# query SearchBooks {
+#   tolkienBooks: booksByAuthorName(authorName: "Tolkien") {
+#     title
+#     price
+#   }
+
+#   orwellBooks: booksByAuthorName(authorName: "orwell") {
+#     title
+#     price
+#   }
+# }
