@@ -1,0 +1,18 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+  graphql:
+    graphiql:
+      enabled: true
+      path: /graphiql
+
+grpc:
+  server:
+    port: 9020
+
+server:
+  port: 8080
