@@ -101,8 +101,8 @@ public class AuthorGraphQLController {
     }
 
     @SchemaMapping(typeName = "Author", field = "books")
-    public List<Book> books(Author author) {
-        return bookRepository.findByAuthorId(author.getId());
+    public List<BookDto> books(AuthorDto author) {
+        return bookRepository.findByAuthorId(author.getId()).stream().map(this::toBookDtoSimple).collect(Collectors.toList());
     }
 
     private AuthorDto toAuthorDto(Author author) {

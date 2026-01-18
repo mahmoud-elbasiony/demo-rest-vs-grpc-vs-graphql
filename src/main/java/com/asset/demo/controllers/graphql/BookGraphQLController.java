@@ -115,7 +115,7 @@ public class BookGraphQLController {
     }
 
     @SchemaMapping(typeName = "Book", field = "author")
-    public Author author(Book book) {
+    public AuthorDto author(BookDto book) {
         return book.getAuthor();
     }
 
