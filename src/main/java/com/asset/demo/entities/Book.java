@@ -26,7 +26,6 @@ public class Book {
     private String isbn;
     private Double price;
 
-    @JsonIgnore
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "author_id")
     private Author author;

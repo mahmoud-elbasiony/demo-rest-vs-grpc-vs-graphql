@@ -1,40 +1,137 @@
-type Author {
-    id: ID!
-    name: String!
-    email: String
-    bio: String
-    books: [Book]
-}
+# src/main/resources/graphql/schema.graphqls
+
+# ============================================
+# TYPES
+# ============================================
 
 type Book {
     id: ID!
     title: String!
     isbn: String!
     price: Float!
-    author: Author!
+    author: Author
 }
+
+type Author {
+    id: ID!
+    name: String!
+    email: String
+    bio: String
+    books: [Book!]!
+}
+
+type User {
+    id: ID!
+    username: String!
+    email: String!
+    roles: [String!]!
+}
+
+# ============================================
+# PAGINATION TYPES
+# ============================================
+
+type PageInfo {
+    page: Int!
+    size: Int!
+    totalElements: Int!
+    totalPages: Int!
+    hasNext: Boolean!
+    hasPrevious: Boolean!
+}
+
+type BookPage {
+    content: [Book!]!
+    pageInfo: PageInfo!
+}
+
+type AuthorPage {
+    content: [Author!]!
+    pageInfo: PageInfo!
+}
+
+# ============================================
+# AUTHENTICATION TYPES
+# ============================================
+
+#type AuthResponse {
+#    token: String!
+#    username: String!
+#    roles: [String!]!
+#}
+
+# ============================================
+# INPUT TYPES
+# ============================================
+
+input CreateBookDto {
+    title: String!
+    isbn: String!
+    price: Float!
+    authorId: ID!
+}
+
+input UpdateBookDto {
+    title: String
+    isbn: String
+    price: Float
+}
+
+input CreateAuthorDto {
+    name: String!
+    email: String
+    bio: String
+}
+
+#input LoginInput {
+#    username: String!
+#    password: String!
+#}
+#
+#input RegisterInput {
+#    username: String!
+#    password: String!
+#    email: String!
+#}
+
+# ============================================
+# QUERIES
+# ============================================
 
 type Query {
-    # Author Queries
-    allAuthors: [Author]
-    author(id: ID!): Author
-    authorByName(name: String!): Author
-
-    # Book Queries
-    allBooks: [Book]
+    # Books
+    allBooks: [Book!]!
     book(id: ID!): Book
-    booksByAuthor(authorId: ID!): [Book]
-    booksByAuthorName(authorName: String!): [Book]
+    booksPaginated(page: Int = 0, size: Int = 10): BookPage!
+
+    # Authors
+    allAuthors: [Author!]!
+    author(id: ID!): Author
+    authorsPaginated(page: Int = 0, size: Int = 10): AuthorPage!
+
+    # Search
+    searchAuthors(name: String!): [Author!]!
+
+    # User (requires authentication)
+#    me: User
 }
 
-type Mutation {
-    # Author Mutations
-    createAuthor(name: String!, email: String, bio: String): Author
-    updateAuthor(id: ID!, name: String, email: String, bio: String): Author
-    deleteAuthor(id: ID!): Boolean
+# ============================================
+# MUTATIONS
+# ============================================
 
-    # Book Mutations
-    createBook(title: String!, isbn: String!, price: Float!, authorId: ID!): Book
-    updateBook(id: ID!, title: String, isbn: String, price: Float, authorId: ID): Book
-    deleteBook(id: ID!): Boolean
+type Mutation {
+    # Authentication
+#    login(input: LoginInput!): AuthResponse!
+#    register(input: RegisterInput!): AuthResponse!
+
+    # Books (requires authentication)
+    createBook(input: CreateBookDto!): Book!
+    updateBook(id: ID!, input: UpdateBookDto!): Book
+    deleteBook(id: ID!): Boolean!
+
+    # Authors (requires ADMIN role)
+    createAuthor(input: CreateAuthorDto!): Author!
+    updateAuthor(id: ID!, input: CreateAuthorDto!): Author
+    deleteAuthor(id: ID!): Boolean!
 }
