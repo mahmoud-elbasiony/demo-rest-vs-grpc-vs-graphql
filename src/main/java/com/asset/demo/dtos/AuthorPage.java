@@ -1,5 +1,6 @@
 package com.asset.demo.dtos;
 
+import com.asset.demo.entities.Author;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,6 +13,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AuthorPage {
-    private List<AuthorDto> content;
+    private List<Author> content;
     private PageInfo pageInfo;
 }

@@ -1,7 +1,5 @@
 package com.asset.demo.controllers.graphql;
 
-import com.asset.demo.dtos.AuthorDto;
-import com.asset.demo.dtos.BookDto;
 import com.asset.demo.dtos.BookPage;
 import com.asset.demo.dtos.CreateBookDto;
 import com.asset.demo.dtos.PageInfo;
@@ -10,6 +8,7 @@ import com.asset.demo.entities.Author;
 import com.asset.demo.entities.Book;
 import com.asset.demo.repositories.AuthorRepository;
 import com.asset.demo.repositories.BookRepository;
+import com.asset.demo.services.BookEventPublisher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -18,11 +17,11 @@ import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.graphql.data.method.annotation.SchemaMapping;
+import org.springframework.graphql.data.method.annotation.SubscriptionMapping;
 import org.springframework.stereotype.Controller;
+import reactor.core.publisher.Flux;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Controller
@@ -30,6 +29,7 @@ public class BookGraphQLController {
 
     private final BookRepository bookRepository;
     private final AuthorRepository authorRepository;
+    private final BookEventPublisher bookEventPublisher;
 
     @QueryMapping
     public List<Book> allBooks() {
@@ -61,7 +61,12 @@ public class BookGraphQLController {
                             .price(createBookDto.getPrice())
                             .author(author)
                             .build();
-                    return bookRepository.save(book);
+                    Book savedBook = bookRepository.save(book);
+
+                    // 📢 Publish event for subscriptions
+                    bookEventPublisher.publishBookCreated(savedBook);
+
+                    return savedBook;
                 })
                 .orElse(null);
     }
@@ -76,7 +81,9 @@ public class BookGraphQLController {
                     if (updateBookDto.getAuthorId() != null) {
                         authorRepository.findById(updateBookDto.getAuthorId()).ifPresent(book::setAuthor);
                     }
-                    return bookRepository.save(book);
+                    Book saved = bookRepository.save(book);                    // 📢 Publish event for subscriptions
+                    bookEventPublisher.publishBookUpdated(saved);
+                    return saved;
                 })
                 .orElse(null);
     }
@@ -85,6 +92,8 @@ public class BookGraphQLController {
     public Boolean deleteBook(@Argument Long id) {
         if (bookRepository.existsById(id)) {
             bookRepository.deleteById(id);
+            // 📢 Publish event for subscriptions
+            bookEventPublisher.publishBookDeleted(id);
             return true;
         }
         return false;
@@ -95,9 +104,7 @@ public class BookGraphQLController {
         Pageable pageable = PageRequest.of(page, size);
         Page<Book> bookPage = bookRepository.findAll(pageable);
 
-        List<BookDto> books = bookPage.getContent().stream()
-                .map(this::toBookDto)
-                .collect(Collectors.toList());
+        List<Book> books = bookPage.getContent();
 
         PageInfo pageInfo = PageInfo.builder()
                 .page(bookPage.getNumber())
@@ -115,27 +122,77 @@ public class BookGraphQLController {
     }
 
     @SchemaMapping(typeName = "Book", field = "author")
-    public AuthorDto author(BookDto book) {
+    public Author author(Book book) {
         return book.getAuthor();
     }
 
-    private BookDto toBookDto(Book book) {
-        return BookDto.builder()
-                .id(book.getId())
-                .title(book.getTitle())
-                .isbn(book.getIsbn())
-                .price(book.getPrice())
-                .author(book.getAuthor() != null ? toAuthorDtoSimple(book.getAuthor()) : null)
-                .build();
+    /**
+     * Subscribe to newly created books
+     * Usage: subscription { bookCreated { id title price } }
+     */
+    @SubscriptionMapping
+    public Flux<Book> bookCreatedSubscription() {
+        return bookEventPublisher.getBookCreatedFlux();
     }
 
-    private AuthorDto toAuthorDtoSimple(Author author) {
-        return AuthorDto.builder()
-                .id(author.getId())
-                .name(author.getName())
-                .email(author.getEmail())
-                .bio(author.getBio())
-                .build();
+    /**
+     * Subscribe to book updates
+     * Usage: subscription { bookUpdated { id title price } }
+     */
+    @SubscriptionMapping
+    public Flux<Book> bookUpdatedSubscription() {
+        return bookEventPublisher.getBookUpdatedFlux();
     }
 
+    /**
+     * Subscribe to book deletions
+     * Usage: subscription { bookDeleted }
+     */
+    @SubscriptionMapping
+    public Flux<Long> bookDeletedSubscription() {
+        return bookEventPublisher.getBookDeletedFlux();
+    }
+
+    /**
+     * Subscribe to specific book updates by ID
+     * Usage: subscription { bookById(id: 1) { id title price } }
+     */
+    @SubscriptionMapping
+    public Flux<Book> bookByIdSubscription(@Argument Long id) {
+        return bookEventPublisher.getBookUpdatedFlux()
+                .filter(book -> book.getId().equals(id));
+    }
+
+    /**
+     * Subscribe to books by specific author
+     * Usage: subscription { booksByAuthor(authorId: 1) { id title } }
+     */
+    @SubscriptionMapping
+    public Flux<Book> booksByAuthorSubscription(@Argument Long authorId) {
+        return bookEventPublisher.getBookCreatedFlux()
+                .filter(book -> book.getAuthor() != null &&
+                                book.getAuthor().getId().equals(authorId));
+    }
+
+    /**
+     * Subscribe to price changes above threshold
+     * Usage: subscription { priceChanges(minPrice: 20.0) { id title price } }
+     */
+    @SubscriptionMapping
+    public Flux<Book> priceChangesSubscription(@Argument Double minPrice) {
+        return bookEventPublisher.getBookUpdatedFlux()
+                .filter(book -> book.getPrice() >= minPrice);
+    }
+
+    /**
+     * Subscribe to all book events (created, updated)
+     * Usage: subscription { bookEvents { id title price } }
+     */
+    @SubscriptionMapping
+    public Flux<Book> bookEventsSubscription() {
+        return Flux.merge(
+                bookEventPublisher.getBookCreatedFlux(),
+                bookEventPublisher.getBookUpdatedFlux()
+        );
+    }
 }

@@ -4,7 +4,10 @@ import com.asset.demo.entities.Book;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import java.util.Collection;
 import java.util.List;
 
 @Repository
@@ -28,5 +31,5 @@ public interface BookRepository extends JpaRepository<Book, Long> {
 
     // Batch load books by author IDs (for DataLoader)
     @Query("SELECT b FROM Book b WHERE b.author.id IN :authorIds")
-    List<Book> findByAuthorIdIn(List<Long> authorIds);
+    List<Book> findAllByAuthorIds(@Param("authorIds") Collection<Long> authorIds);
 }

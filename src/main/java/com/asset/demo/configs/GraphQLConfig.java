@@ -2,9 +2,11 @@ package com.asset.demo.configs;
 
 import graphql.analysis.MaxQueryDepthInstrumentation;
 import graphql.analysis.MaxQueryComplexityInstrumentation;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+@RequiredArgsConstructor
 @Configuration
 public class GraphQLConfig {
 

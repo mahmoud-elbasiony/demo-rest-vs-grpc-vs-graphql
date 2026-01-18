@@ -1,14 +1,22 @@
 spring:
   datasource:
-    url: jdbc:h2:mem:testdb
-    driver-class-name: org.h2.Driver
+    url: jdbc:oracle:thin:@localhost:1521:ORCLCDB
+    driver-class-name: oracle.jdbc.OracleDriver
+    username: demo
+    password: 12345
   jpa:
     hibernate:
       ddl-auto: create-drop
+      properties:
+        format_sql: true
+    show-sql: true
   graphql:
     graphiql:
       enabled: true
       path: /graphiql
+    path: /graphql
+    websocket:
+      path: /graphql
 
 grpc:
   server:
@@ -29,3 +37,11 @@ springdoc:
     tagsSorter: alpha
     tryItOutEnabled: true
   show-actuator: false
+
+logging:
+    level:
+      org:
+        hibernate:
+          orm:
+            jdbc:
+              bind: trace

@@ -1,15 +1,16 @@
 package com.asset.demo.controllers.graphql;
 
-import com.asset.demo.dtos.AuthorDto;
 import com.asset.demo.dtos.AuthorPage;
-import com.asset.demo.dtos.BookDto;
 import com.asset.demo.dtos.CreateAuthorDto;
 import com.asset.demo.dtos.PageInfo;
 import com.asset.demo.entities.Author;
 import com.asset.demo.entities.Book;
 import com.asset.demo.repositories.AuthorRepository;
 import com.asset.demo.repositories.BookRepository;
+import com.asset.demo.services.AuthorEventPublisher;
+import graphql.schema.DataFetchingEnvironment;
 import lombok.RequiredArgsConstructor;
+import org.dataloader.DataLoader;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -17,18 +18,19 @@ import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.graphql.data.method.annotation.SchemaMapping;
+import org.springframework.graphql.data.method.annotation.SubscriptionMapping;
 import org.springframework.stereotype.Controller;
+import reactor.core.publisher.Flux;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.concurrent.CompletionStage;
 
 @RequiredArgsConstructor
 @Controller
 public class AuthorGraphQLController {
 
     private final AuthorRepository authorRepository;
-    private final BookRepository bookRepository;
+    private final AuthorEventPublisher authorEventPublisher;
 
     @QueryMapping
     public List<Author> allAuthors() {
@@ -52,7 +54,12 @@ public class AuthorGraphQLController {
                 .email(createAuthorDto.getEmail())
                 .bio(createAuthorDto.getBio())
                 .build();
-        return authorRepository.save(author);
+        Author savedAuthor = authorRepository.save(author);
+
+        // 📢 Publish event for subscriptions
+        authorEventPublisher.publishAuthorCreated(savedAuthor);
+
+        return savedAuthor;
     }
 
     @MutationMapping
@@ -62,7 +69,12 @@ public class AuthorGraphQLController {
                     if (createAuthorDto.getName() != null) author.setName(createAuthorDto.getName());
                     if (createAuthorDto.getEmail() != null) author.setEmail(createAuthorDto.getEmail());
                     if (createAuthorDto.getBio() != null) author.setBio(createAuthorDto.getBio());
-                    return authorRepository.save(author);
+                    Author saved = authorRepository.save(author);
+
+                    // 📢 Publish event for subscriptions
+                    authorEventPublisher.publishAuthorUpdated(saved);
+
+                    return saved;
                 })
                 .orElse(null);
     }
@@ -81,9 +93,7 @@ public class AuthorGraphQLController {
         Pageable pageable = PageRequest.of(page, size);
         Page<Author> authorPage = authorRepository.findAll(pageable);
 
-        List<AuthorDto> authors = authorPage.getContent().stream()
-                .map(this::toAuthorDto)
-                .collect(Collectors.toList());
+        List<Author> authors = authorPage.getContent();
 
         PageInfo pageInfo = PageInfo.builder()
                 .page(authorPage.getNumber())
@@ -100,29 +110,51 @@ public class AuthorGraphQLController {
                 .build();
     }
 
+    /**
+     * N+1 problem solution without DataLoader
+     *
+     * @param author
+     * @return
+     */
+//    @SchemaMapping(typeName = "Author", field = "books")
+//    public List<Book> books(Author author) {
+//        return bookRepository.findByAuthorId(author.getId());
+//    }
+
+    /**
+     * N+1 problem solution with DataLoader
+     *
+     * @param author
+     * @param env
+     * @return
+     */
     @SchemaMapping(typeName = "Author", field = "books")
-    public List<BookDto> books(AuthorDto author) {
-        return bookRepository.findByAuthorId(author.getId()).stream().map(this::toBookDtoSimple).collect(Collectors.toList());
+    public CompletionStage<List<Book>> books(
+            Author author,
+            DataFetchingEnvironment env) {
+
+        DataLoader<Long, List<Book>> booksLoader =
+                env.getDataLoader("booksByAuthorIds");
+
+        return booksLoader.load(author.getId());
     }
 
-    private AuthorDto toAuthorDto(Author author) {
-        return AuthorDto.builder()
-                .id(author.getId())
-                .name(author.getName())
-                .email(author.getEmail())
-                .bio(author.getBio())
-                .books(author.getBooks() != null ?
-                        author.getBooks().stream().map(this::toBookDtoSimple).collect(Collectors.toList()) :
-                        Collections.emptyList())
-                .build();
+    /**
+     * Subscribe to new authors
+     * Usage: subscription { authorCreated { id name } }
+     */
+    @SubscriptionMapping
+    public Flux<Author> authorCreatedSubscription() {
+        return authorEventPublisher.getAuthorCreatedFlux();
     }
 
-    private BookDto toBookDtoSimple(Book book) {
-        return BookDto.builder()
-                .id(book.getId())
-                .title(book.getTitle())
-                .isbn(book.getIsbn())
-                .price(book.getPrice())
-                .build();
+    /**
+     * Subscribe to author updates
+     * Usage: subscription { authorUpdated { id name } }
+     */
+    @SubscriptionMapping
+    public Flux<Author> authorUpdatedSubscription() {
+        return authorEventPublisher.getAuthorUpdatedFlux();
     }
+
 }

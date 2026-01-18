@@ -1,9 +1,3 @@
-# src/main/resources/graphql/schema.graphqls
-
-# ============================================
-# TYPES
-# ============================================
-
 type Book {
     id: ID!
     title: String!
@@ -51,16 +45,6 @@ type AuthorPage {
 }
 
 # ============================================
-# AUTHENTICATION TYPES
-# ============================================
-
-#type AuthResponse {
-#    token: String!
-#    username: String!
-#    roles: [String!]!
-#}
-
-# ============================================
 # INPUT TYPES
 # ============================================
 
@@ -83,21 +67,6 @@ input CreateAuthorDto {
     bio: String
 }
 
-#input LoginInput {
-#    username: String!
-#    password: String!
-#}
-#
-#input RegisterInput {
-#    username: String!
-#    password: String!
-#    email: String!
-#}
-
-# ============================================
-# QUERIES
-# ============================================
-
 type Query {
     # Books
     allBooks: [Book!]!
@@ -112,8 +81,6 @@ type Query {
     # Search
     searchAuthors(name: String!): [Author!]!
 
-    # User (requires authentication)
-#    me: User
 }
 
 # ============================================
@@ -121,9 +88,6 @@ type Query {
 # ============================================
 
 type Mutation {
-    # Authentication
-#    login(input: LoginInput!): AuthResponse!
-#    register(input: RegisterInput!): AuthResponse!
 
     # Books (requires authentication)
     createBook(input: CreateBookDto!): Book!
@@ -134,4 +98,37 @@ type Mutation {
     createAuthor(input: CreateAuthorDto!): Author!
     updateAuthor(id: ID!, input: CreateAuthorDto!): Author
     deleteAuthor(id: ID!): Boolean!
+}
+
+# ============================================
+# SUBSCRIPTION
+# ============================================
+
+type Subscription {
+    # Subscribe to new books
+    bookCreatedSubscription: Book!
+
+    # Subscribe to book updates
+    bookUpdatedSubscription: Book!
+
+    # Subscribe to book deletions
+    bookDeletedSubscription: ID!
+
+    # Subscribe to specific book updates
+    bookByIdSubscription(id: ID!): Book!
+
+    # Subscribe to books by specific author
+    booksByAuthorSubscription(authorId: ID!): Book!
+
+    # Subscribe to price changes above threshold
+    priceChangesSubscription(minPrice: Float!): Book!
+
+    # Subscribe to new authors
+    authorCreatedSubscription: Author!
+
+    # Subscribe to author updates
+    authorUpdatedSubscription: Author!
+
+    # Subscribe to all book events (created, updated, deleted)
+    bookEventsSubscription: Book!
 }
