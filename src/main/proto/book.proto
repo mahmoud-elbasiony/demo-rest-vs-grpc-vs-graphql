@@ -24,6 +24,17 @@ service BookService {
     rpc UpdateBook(UpdateBookRequest) returns (BookMessage);
     rpc DeleteBook(BookIdRequest) returns (DeleteResponse);
     rpc SearchByAuthor(AuthorSearchRequest) returns (BookListResponse);
+
+    // Server streaming – returns stream of BookMessage
+    rpc StreamBooksByAuthor(AuthorIdRequest) returns (stream BookMessage) {}
+
+    // Client Streaming – Example: bulk create books
+    rpc BulkCreateBooks(stream CreateBookRequest) returns (BookListResponse) {}
+
+    // Bidirectional streaming for bulk book creation
+    // Client sends many CreateBookRequest
+    // Server responds with many BookCreationResult (one per book + final summary)
+    rpc BulkCreateBooksStream(stream CreateBookRequest) returns (stream BookCreationResult) {}
 }
 
 message EmptyRequest {}
@@ -95,4 +106,12 @@ message AuthorSearchRequest {
 
 message DeleteResponse {
     bool success = 1;
+}
+
+message BookCreationResult {
+  oneof result {
+    BookMessage createdBook = 1;      // success case
+    string errorMessage = 2;          // failure case
+  }
+  bool success = 3;
 }
