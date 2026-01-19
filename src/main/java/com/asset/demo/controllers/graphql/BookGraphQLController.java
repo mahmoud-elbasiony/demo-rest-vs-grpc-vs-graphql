@@ -8,7 +8,7 @@ import com.asset.demo.entities.Author;
 import com.asset.demo.entities.Book;
 import com.asset.demo.repositories.AuthorRepository;
 import com.asset.demo.repositories.BookRepository;
-import com.asset.demo.services.BookEventPublisher;
+import com.asset.demo.events.BookEventPublisher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;

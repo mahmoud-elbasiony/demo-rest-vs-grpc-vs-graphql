@@ -32,4 +32,6 @@ public interface BookRepository extends JpaRepository<Book, Long> {
     // Batch load books by author IDs (for DataLoader)
     @Query("SELECT b FROM Book b WHERE b.author.id IN :authorIds")
     List<Book> findAllByAuthorIds(@Param("authorIds") Collection<Long> authorIds);
+
+    boolean existsByIsbn(String isbn);
 }

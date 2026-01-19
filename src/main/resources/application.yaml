@@ -6,7 +6,7 @@ spring:
     password: 12345
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: none
       properties:
         format_sql: true
     show-sql: true

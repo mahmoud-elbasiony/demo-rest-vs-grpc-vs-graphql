@@ -3,6 +3,7 @@ package com.asset.demo.configs;
 import com.asset.demo.entities.Book;
 import com.asset.demo.repositories.BookRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.dataloader.DataLoader;
 import org.dataloader.DataLoaderFactory;
 import org.dataloader.DataLoaderRegistry;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Configuration
+@Log4j2
 public class DataLoaderConfig {
 
     private final BookRepository bookRepository;
@@ -30,13 +32,13 @@ public class DataLoaderConfig {
         return new WebGraphQlInterceptor() {
             @Override
             public Mono<WebGraphQlResponse> intercept(WebGraphQlRequest request, Chain chain) {
-                System.out.println("=== WebGraphQlInterceptor invoked ===");
+                log.debug("=== WebGraphQlInterceptor invoked ===");
 
                 DataLoaderRegistry registry = new DataLoaderRegistry();
 
                 DataLoader<Long, List<Book>> booksLoader = DataLoaderFactory.newDataLoader(
                         authorIds -> CompletableFuture.supplyAsync(() -> {
-                            System.out.println(">>> BatchLoader executing for IDs: " + authorIds);
+                            log.debug(">>> BatchLoader executing for IDs: " + authorIds);
 
                             List<Book> books = bookRepository.findAllByAuthorIds(authorIds);
 
@@ -50,7 +52,7 @@ public class DataLoaderConfig {
                 );
 
                 registry.register("booksByAuthorIds", booksLoader);
-                System.out.println(">>> Registered booksByAuthorIds in interceptor");
+                log.debug(">>> Registered booksByAuthorIds in interceptor");
 
                 request.configureExecutionInput((executionInput, builder) ->
                         builder.dataLoaderRegistry(registry).build()

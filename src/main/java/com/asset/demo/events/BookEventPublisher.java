@@ -1,10 +1,12 @@
-package com.asset.demo.services;
+package com.asset.demo.events;
 
 import com.asset.demo.entities.Book;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 
+@Log4j2
 @Service
 public class BookEventPublisher {
 
@@ -18,7 +20,7 @@ public class BookEventPublisher {
      */
     public void publishBookCreated(Book book) {
         bookCreatedSink.tryEmitNext(book);
-        System.out.println("📢 Published bookCreated event: " + book.getTitle());
+        log.debug("\uD83D\uDCE2 Published bookCreated event: {}", book.getTitle());
     }
 
     /**
@@ -26,7 +28,7 @@ public class BookEventPublisher {
      */
     public void publishBookUpdated(Book book) {
         bookUpdatedSink.tryEmitNext(book);
-        System.out.println("📢 Published bookUpdated event: " + book.getTitle());
+        log.debug("\uD83D\uDCE2 Published bookUpdated event: {}", book.getTitle());
     }
 
     /**
@@ -34,7 +36,7 @@ public class BookEventPublisher {
      */
     public void publishBookDeleted(Long bookId) {
         bookDeletedSink.tryEmitNext(bookId);
-        System.out.println("📢 Published bookDeleted event: " + bookId);
+        log.debug("\uD83D\uDCE2 Published bookDeleted event: {}", bookId);
     }
 
     /**

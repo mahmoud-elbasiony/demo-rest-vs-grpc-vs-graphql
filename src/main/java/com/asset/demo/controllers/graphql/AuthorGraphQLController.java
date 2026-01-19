@@ -6,8 +6,8 @@ import com.asset.demo.dtos.PageInfo;
 import com.asset.demo.entities.Author;
 import com.asset.demo.entities.Book;
 import com.asset.demo.repositories.AuthorRepository;
+import com.asset.demo.events.AuthorEventPublisher;
 import com.asset.demo.repositories.BookRepository;
-import com.asset.demo.services.AuthorEventPublisher;
 import graphql.schema.DataFetchingEnvironment;
 import lombok.RequiredArgsConstructor;
 import org.dataloader.DataLoader;
@@ -23,13 +23,14 @@ import org.springframework.stereotype.Controller;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
-import java.util.concurrent.CompletionStage;
+import java.util.concurrent.CompletableFuture;
 
 @RequiredArgsConstructor
 @Controller
 public class AuthorGraphQLController {
 
     private final AuthorRepository authorRepository;
+    private final BookRepository bookRepository;
     private final AuthorEventPublisher authorEventPublisher;
 
     @QueryMapping
@@ -129,7 +130,7 @@ public class AuthorGraphQLController {
      * @return
      */
     @SchemaMapping(typeName = "Author", field = "books")
-    public CompletionStage<List<Book>> books(
+    public CompletableFuture<List<Book>> books(
             Author author,
             DataFetchingEnvironment env) {
 
